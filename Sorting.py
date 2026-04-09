@@ -1,6 +1,7 @@
 import time
 import heapq
 
+
 def print_array(arr):
     print("[", ", ".join(map(str, arr)), "]", sep="")
 
@@ -10,14 +11,23 @@ def is_sorted(arr):
 def analyze_array(arr):
     n = len(arr)
 
+    if n == 0:
+        return {
+            "size": 0,
+            "min": None,
+            "max": None,
+            "sortedness": 100,
+            "pattern": "Empty"
+        }
+
     inversions = sum(1 for i in range(n-1) if arr[i] > arr[i+1])
-    sortedness = 100 - ((inversions / n) * 100) if n > 0 else 100
+    sortedness = 100 - ((inversions / n) * 100)
 
     if is_sorted(arr):
         pattern = "Already Sorted"
     elif all(arr[i] > arr[i+1] for i in range(n-1)):
         pattern = "Reverse Sorted"
-    elif sortedness > 80:
+    elif sortedness >= 80:
         pattern = "Nearly Sorted"
     else:
         pattern = "Random"
@@ -30,16 +40,20 @@ def analyze_array(arr):
         "pattern": pattern
     }
 
+
 def bubble_sort(arr):
     c = 0
     n = len(arr)
     for i in range(n):
+        swapped = False
         for j in range(0, n-i-1):
             c += 1
             if arr[j] > arr[j+1]:
                 arr[j], arr[j+1] = arr[j+1], arr[j]
+                swapped = True
+        if not swapped:
+            break
     return c
-
 
 def selection_sort(arr):
     c = 0
@@ -51,7 +65,6 @@ def selection_sort(arr):
                 min_idx = j
         arr[i], arr[min_idx] = arr[min_idx], arr[i]
     return c
-
 
 def insertion_sort(arr):
     c = 0
@@ -67,7 +80,6 @@ def insertion_sort(arr):
                 break
         arr[j+1] = key
     return c
-
 
 def quick_sort(arr):
     c = [0]
@@ -91,7 +103,6 @@ def quick_sort(arr):
 
     quick(0, len(arr)-1)
     return c[0]
-
 
 def merge_sort(arr):
     c = [0]
@@ -121,7 +132,6 @@ def merge_sort(arr):
 
     return c[0]
 
-
 def heap_sort(arr):
     heap = arr[:]
     heapq.heapify(heap)
@@ -129,45 +139,64 @@ def heap_sort(arr):
         arr[i] = heapq.heappop(heap)
     return 0
 
-
 def python_sort(arr):
     arr.sort()
     return 0
 
-
 def smart_decision(info):
     size = info["size"]
     pattern = info["pattern"]
-
+    sortedness = info["sortedness"]
 
     if pattern == "Already Sorted":
-        decision = "Insertion Sort"
-        reason = "Data already sorted → O(n) performance with insertion sort"
+        return ("Insertion Sort",
+                "Already sorted → O(n)",
+                "Bubble Sort")
 
     elif pattern == "Reverse Sorted":
-        decision = "Merge Sort / Quick Sort"
-        reason = "Reverse sorted → insertion becomes worst-case, use divide & conquer"
+        return ("Merge Sort",
+                "Reverse sorted → avoids O(n²)",
+                "Heap Sort")
 
     elif pattern == "Nearly Sorted":
-        decision = "Insertion Sort"
-        reason = "Nearly sorted → insertion sort minimizes shifts and comparisons"
+        if size < 15:
+            return ("Bubble Sort",
+                    "Nearly sorted small → few swaps",
+                    "Insertion Sort")
+        else:
+            return ("Insertion Sort",
+                    "Nearly sorted → efficient shifting",
+                    "Bubble Sort")
 
-    elif size <= 10:
-        decision = "Insertion Sort"
-        reason = "Small dataset → simple algorithms outperform complex ones"
+    elif size <= 5:
+        return ("Selection Sort",
+                "Very small → simple & consistent",
+                "Insertion Sort")
 
-    elif size > 50:
-        decision = "Merge Sort"
-        reason = "Large dataset → merge sort guarantees O(n log n)"
+    elif size <= 15:
+        return ("Insertion Sort",
+                "Small dataset → low overhead",
+                "Selection Sort")
+
+    elif size <= 50:
+        if sortedness < 40:
+            return ("Quick Sort",
+                    "Random medium → fast average",
+                    "Merge Sort")
+        else:
+            return ("Insertion Sort",
+                    "Moderately sorted",
+                    "Quick Sort")
 
     else:
-        decision = "Quick Sort"
-        reason = "General case → quick sort is fastest on average"
-
-    secondary = "Quick Sort" if "Quick Sort" not in decision else "Merge Sort"
-
-    return decision, reason, secondary
-
+        if pattern == "Random":
+            return ("Heap Sort",
+                    "Large random → guaranteed O(n log n)",
+                    "Merge Sort")
+        else:
+            return ("Merge Sort",
+                    "Large structured data",
+                    "Heap Sort")
 
 def main():
     print("="*60)
@@ -186,7 +215,6 @@ def main():
     print(f"Sortedness  : {info['sortedness']}%")
     print(f"Range       : {info['min']} – {info['max']}")
     print(f"Pattern     : {info['pattern']}")
-
 
     algorithms = [
         ("Python Sort", python_sort),
@@ -215,7 +243,6 @@ def main():
 
     results.sort(key=lambda x: x["time"])
 
-
     print("\n PERFORMANCE TABLE")
     print("-"*60)
     print(f"{'Algorithm':<20}{'Time (ms)':<15}{'Comparisons'}")
@@ -242,8 +269,8 @@ def main():
     print("\n Sorted Output:")
     print_array(best["sorted"])
 
-    print("\n STATUS:")
-    print(" Correct Sorting" if is_sorted(best["sorted"]) else " Error")
+    
 
     print("\n" + "="*60)
+
 main()
